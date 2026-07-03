@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: backend
+  namespace: argocd
+spec:
+  project: bikri
+  source:
+    repoURL: https://github.com/<org>/bikri-gitops.git
+    targetRevision: main
+    path: apps/backend-monolith/overlays/local    # switch to overlays/cloud on the cloud cluster
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: bikri-local
+  syncPolicy:
+    automated:            # PULL-based: ArgoCD polls the repo (~3 min) and syncs on its own
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

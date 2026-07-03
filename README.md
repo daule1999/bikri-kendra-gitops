@@ -26,3 +26,6 @@ kubectl -n bikri-local create secret generic backend-secrets \
 
 Validate locally before committing: `kustomize build apps/backend/overlays/local`.
 Replace `<org>`: `grep -rl '<org>' . | xargs sed -i 's/<org>/YOUR_GH_ORG/g'`
+# bikri-kendra-gitops
+# bikri-kendra-gitops
+# bikri-kendra-gitops

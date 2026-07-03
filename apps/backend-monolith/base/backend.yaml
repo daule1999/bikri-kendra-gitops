@@ -1,0 +1,69 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bikri-backend
+  labels: { app: bikri-backend, tier: backend }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: bikri-backend } }
+  template:
+    metadata:
+      labels: { app: bikri-backend, tier: backend }
+    spec:
+      containers:
+        - name: bikri-backend
+          image: ghcr.io/<org>/vy/bikri-backend:placeholder   # tag set by overlay
+          ports: [ { containerPort: 8080 } ]
+          envFrom:
+            - configMapRef: { name: backend-config }
+            - secretRef: { name: backend-secrets }
+          readinessProbe:
+            httpGet: { path: /actuator/health, port: 8080 }
+            initialDelaySeconds: 30
+          livenessProbe:
+            httpGet: { path: /actuator/health, port: 8080 }
+            initialDelaySeconds: 60
+          resources:
+            requests: { memory: 1Gi, cpu: 250m }
+            limits: { memory: 2Gi }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bikri-backend
+spec:
+  type: NodePort
+  selector: { app: bikri-backend }
+  ports: [ { port: 8080, targetPort: 8080, nodePort: 30081 } ]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: redis }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: redis } }
+  template:
+    metadata: { labels: { app: redis } }
+    spec:
+      containers:
+        - name: redis
+          image: redis:7-alpine
+          args: ["redis-server", "--save", "60", "1", "--appendonly", "yes"]
+          ports: [ { containerPort: 6379 } ]
+          resources: { requests: { memory: 64Mi }, limits: { memory: 256Mi } }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: redis }
+spec:
+  selector: { app: redis }
+  ports: [ { port: 6379 } ]
+---
+apiVersion: v1
+kind: ConfigMap
+metadata: { name: backend-config }
+data:
+  REDIS_HOST: redis
+  REDIS_PORT: "6379"
+  DB_NAME: bikri_db          # the single merged database
+  # DB_HOST is env-specific → overlay
