@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: printer-service
+  labels: { app: printer-service, tier: backend }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: printer-service } }
+  template:
+    metadata:
+      labels: { app: printer-service, tier: backend }
+    spec:
+      containers:
+        - name: printer-service
+          image: ghcr.io/<org>/vy/printer-service:placeholder   # tag set by overlay
+          ports: [ { containerPort: 8080 } ]
+          envFrom:
+            - configMapRef: { name: backend-config }
+            - secretRef: { name: backend-secrets }
+          readinessProbe:
+            httpGet: { path: /actuator/health, port: 8080 }
+            initialDelaySeconds: 20
+          resources:
+            requests: { memory: 384Mi, cpu: 100m }
+            limits: { memory: 768Mi }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: printer-service
+spec:
+  selector: { app: printer-service }
+  ports: [ { port: 8080, targetPort: 8080 } ]

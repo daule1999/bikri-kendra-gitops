@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  labels: { app: frontend, tier: frontend }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: frontend } }
+  template:
+    metadata:
+      labels: { app: frontend, tier: frontend }
+    spec:
+      containers:
+        - name: frontend
+          image: ghcr.io/<org>/vy/bikri-kendra-ui:placeholder   # tag set by overlay
+          ports: [ { containerPort: 3000 } ]
+          env:
+            - name: NEXT_PUBLIC_API_BASE_URL
+              valueFrom: { configMapKeyRef: { name: frontend-config, key: NEXT_PUBLIC_API_BASE_URL } }
+            - name: INTERNAL_API_BASE_URL
+              valueFrom: { configMapKeyRef: { name: frontend-config, key: INTERNAL_API_BASE_URL } }
+          readinessProbe:
+            httpGet: { path: /api/health, port: 3000 }
+            initialDelaySeconds: 10
+          resources:
+            requests: { memory: 512Mi, cpu: 200m }
+            limits: { memory: 1536Mi }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+spec:
+  type: NodePort
+  selector: { app: frontend }
+  ports: [ { port: 3000, targetPort: 3000, nodePort: 30000 } ]

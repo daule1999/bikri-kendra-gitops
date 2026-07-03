@@ -1,0 +1,14 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: bikri-local
+resources:
+  - ../../base
+configMapGenerator:
+  - name: frontend-config
+    literals:
+      - NEXT_PUBLIC_API_BASE_URL=http://bikri.lan/gateway   # what browsers can reach
+      - INTERNAL_API_BASE_URL=http://traefik.bikri-local.svc:8090
+# ── DEPLOYS HAPPEN HERE ── bump newTag, commit, ArgoCD syncs.
+images:
+  - name: ghcr.io/<org>/vy/bikri-kendra-ui
+    newTag: release-00.01

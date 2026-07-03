@@ -1,0 +1,26 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: bikri-prod
+resources:
+  - ../../base
+configMapGenerator:
+  - name: backend-config
+    behavior: merge
+    literals:
+      - DB_HOST=<cloud-db-host>   # k3s bare-metal: use the host LAN IP instead
+      - DB_PORT=3306
+# ── DEPLOYS HAPPEN HERE ──────────────────────────────────────────────
+# CI (or you) bumps newTag below; ArgoCD pulls and syncs. That IS the deploy.
+images:
+  - name: ghcr.io/<org>/vy/auth-service
+    newTag: release-00.01
+  - name: ghcr.io/<org>/vy/user-service
+    newTag: release-00.01
+  - name: ghcr.io/<org>/vy/inventory-service
+    newTag: release-00.01
+  - name: ghcr.io/<org>/vy/sales-service
+    newTag: release-00.01
+  - name: ghcr.io/<org>/vy/billing-service
+    newTag: release-00.01
+  - name: ghcr.io/<org>/vy/printer-service
+    newTag: release-00.01

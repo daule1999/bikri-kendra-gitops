@@ -1,0 +1,15 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: bikri
+  namespace: argocd
+spec:
+  description: Bikri Kendra event-management stack
+  sourceRepos:
+    - https://github.com/<org>/bikri-gitops.git
+  destinations:
+    - namespace: 'bikri-*'
+      server: https://kubernetes.default.svc
+  clusterResourceWhitelist:
+    - group: ''
+      kind: Namespace

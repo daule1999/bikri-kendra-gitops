@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth-service
+  labels: { app: auth-service, tier: backend }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: auth-service } }
+  template:
+    metadata:
+      labels: { app: auth-service, tier: backend }
+    spec:
+      containers:
+        - name: auth-service
+          image: ghcr.io/<org>/vy/auth-service:placeholder   # tag set by overlay
+          ports: [ { containerPort: 8084 } ]
+          envFrom:
+            - configMapRef: { name: backend-config }
+            - secretRef: { name: backend-secrets }
+          readinessProbe:
+            httpGet: { path: /actuator/health, port: 8084 }
+            initialDelaySeconds: 20
+          resources:
+            requests: { memory: 384Mi, cpu: 100m }
+            limits: { memory: 768Mi }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth-service
+spec:
+  selector: { app: auth-service }
+  ports: [ { port: 8084, targetPort: 8084 } ]

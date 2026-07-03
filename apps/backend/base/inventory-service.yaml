@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: inventory-service
+  labels: { app: inventory-service, tier: backend }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: inventory-service } }
+  template:
+    metadata:
+      labels: { app: inventory-service, tier: backend }
+    spec:
+      containers:
+        - name: inventory-service
+          image: ghcr.io/<org>/vy/inventory-service:placeholder   # tag set by overlay
+          ports: [ { containerPort: 8082 } ]
+          envFrom:
+            - configMapRef: { name: backend-config }
+            - secretRef: { name: backend-secrets }
+          readinessProbe:
+            httpGet: { path: /actuator/health, port: 8082 }
+            initialDelaySeconds: 20
+          resources:
+            requests: { memory: 384Mi, cpu: 100m }
+            limits: { memory: 768Mi }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: inventory-service
+spec:
+  selector: { app: inventory-service }
+  ports: [ { port: 8082, targetPort: 8082 } ]
